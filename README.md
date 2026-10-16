@@ -1,45 +1,47 @@
-# DCS 管理画面 UI 刷新 — 動作検証レポート
+# DCS Admin Re-skin — Verification Report
 
-現行 staging（Django 標準管理画面）と ui-improvement（django-unfold による新 UI）を
-**同一データ**で突き合わせ、既存機能が壊れていないことを確認した記録です。
+A side-by-side check that the new DCS admin UI (django-unfold) does not break anything in the
+current one, comparing **staging** against the **ui-improvement** server on identical data.
 
-📄 **レポート: https://husen-sera.github.io/dcs-admin-ui-verification/**
+📄 **Report: https://husen-sera.github.io/dcs-admin-ui-verification/**
 
-## 結論
+## Verdict
 
-回帰 0 件。差分は 3 件で、いずれも意図した変更か検証環境固有のものです。
+No functional regressions. Three differences were found; each is either an intended change
+or an artefact of the review environment.
 
-| 項目 | 結果 |
+| Check | Result |
 |---|---|
-| 検証ルート | 20 / 20 が両環境で HTTP 200 |
-| 一覧画面 | 17 / 17 モデルで件数一致（15 件は並び順まで同一） |
-| 絞り込み・並替・ページ送り・検索 | 11 / 11 が同じ行を返す |
-| サーバーエラー / 読み込み失敗 | 0 |
-| GraphQL スキーマ差分 | 0（FE 対応不要） |
-| マイグレーション | 6 件、すべてメタデータのみ・dev と番号衝突なし |
-| 緊急停止スイッチ | 実機で動作確認済み |
+| Routes returning HTTP 200 on both | 20 / 20 |
+| Admin lists with matching row counts | 17 / 17 models |
+| Lists matching row-for-row by primary key | 15 / 17 |
+| Filter / sort / paging / search cases | 11 / 11 return the same rows |
+| Server errors or failed asset loads | 0 |
+| GraphQL schema changes from the UI work | 0 — no frontend work needed |
+| Migrations | 6, all metadata-only, no collision with dev |
+| Emergency kill switch | exercised on the live server |
 
-## 検証した環境
+## Environments compared
 
 | | Before | After |
 |---|---|---|
 | URL | staging.euclid-accounting.com | 153.127.51.205:1313 |
-| ブランチ | `dev` @ `2a1a90fe` | `ui-improvement` @ `a7600865` |
-| 管理画面 | Django 標準 | django-unfold |
-| DB | `dcs-app-stg` | `dcs-app-ui`（stg の複製） |
+| Branch | `dev` @ `2a1a90fe` | `ui-improvement` @ `a7600865` |
+| Admin | stock Django | django-unfold |
+| Database | `dcs-app-stg` | `dcs-app-ui` (clone of stg) |
 
-同一サーバー・同一 PostgreSQL クラスタ上で動作しているため、
-同じ行が同じ順で返るはずであり、返らなければ実装差分として検出できます。
+Both run on the same server and the same PostgreSQL cluster, so the same rows should come
+back in the same order — and where they don't, the difference is the implementation.
 
-## 見つかった差分
+## The three differences
 
-1. **ユーザー一覧の並び順** — ユーザー名順 → メールアドレス順（意図した変更。表示される 36 件は同一）
-2. **バックグラウンド処理の履歴** — staging は常時更新、複製側は停止時点のまま（データの鮮度差）
-3. **ui-improvement が dev より 8 コミット遅れ** — セキュリティ修正を含む。フェーズ 5 のリベースで解消
+1. **User list sorts by email instead of username** — intended; the same 36 users appear in both.
+2. **Background-task history does not line up** — staging keeps writing, the clone is frozen. Data freshness, not code.
+3. **ui-improvement is 8 commits behind dev** — includes a security fix. Resolved by the rebase in phase 5.
 
-## 注意
+## Note
 
-スクリーンショットは公開前に**メールアドレスと氏名をマスク**しています。
-画面上の「•」は実データではありません。
+Screenshots were published with **email addresses and personal names masked**. The dots
+shown in place of those values are not real data.
 
 ClickUp: z94amcqevr / PR #754
