@@ -147,7 +147,11 @@ section{scroll-margin-top:72px}
    slider, and touch input moves the divider on tap instead of dragging. */
 .cmp{position:relative;line-height:0;background:#0b0c10;user-select:none;
   touch-action:pan-y;aspect-ratio:1440/1000}
-.cmp img{display:block;width:100%;height:auto}
+/* Pressing on an <img> and moving starts the browser's native image drag, which
+   fires pointercancel -- the divider then stopped following after the first
+   move. Taking the images out of hit-testing leaves .cmp as the only target. */
+.cmp img{display:block;width:100%;height:auto;pointer-events:none;
+  -webkit-user-drag:none;user-select:none}
 .cmp .after{position:absolute;inset:0;width:100%;clip-path:inset(0 0 0 var(--pos,50%))}
 .cmp .after img{position:absolute;top:0;left:0;width:100%;height:auto}
 @media (hover:hover) and (pointer:fine){ .cmp{cursor:ew-resize} }
@@ -491,8 +495,8 @@ function show(i, keepPos){
       '<div class="shot-head"><h3>' + title + '</h3><span class="path">' + path + '</span>' +
         '<span class="note">' + note + '</span></div>' +
       '<div class="cmp" style="--pos:' + pos + '%">' +
-        '<img src="img/staging-' + id + '.webp" width="1440" height="1000" alt="' + title + ' — current admin">' +
-        '<div class="after"><img src="img/newui-' + id + '.webp" width="1440" height="1000" alt="' + title + ' — new UI"></div>' +
+        '<img draggable="false" src="img/staging-' + id + '.webp" width="1440" height="1000" alt="' + title + ' — current admin">' +
+        '<div class="after"><img draggable="false" src="img/newui-' + id + '.webp" width="1440" height="1000" alt="' + title + ' — new UI"></div>' +
         '<span class="lbl l">Before · current</span><span class="lbl r">After · new UI</span>' +
         '<span class="handle"></span>' +
       '</div>' +
@@ -520,8 +524,10 @@ function show(i, keepPos){
   var dragging = false;
   cmp.addEventListener('pointerdown', function(e){
     if (e.pointerType === 'touch'){ fromEvent(e); return; }
+    e.preventDefault();
     dragging = true; cmp.setPointerCapture(e.pointerId); fromEvent(e);
   });
+  cmp.addEventListener('dragstart', function(e){ e.preventDefault(); });
   cmp.addEventListener('pointermove', function(e){ if (dragging) fromEvent(e); });
   cmp.addEventListener('pointerup', function(){ dragging = false; });
   cmp.addEventListener('pointercancel', function(){ dragging = false; });
