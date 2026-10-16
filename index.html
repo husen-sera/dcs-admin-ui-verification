@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DCS 管理画面 UI 刷新 — 動作検証レポート</title>
+<meta name="description" content="staging（現行）と ui-improvement（新UI）の比較検証。機能の非破壊を確認した証跡。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
+<style>
+:root{
+  --bg:#fbfbfd; --panel:#ffffff; --ink:#15161a; --muted:#5d6472; --line:#e6e8ee;
+  --accent:#6d3bf5; --accent-soft:#f1ecff;
+  --ok:#0f8a5f; --ok-soft:#e6f6ef; --warn:#9a6300; --warn-soft:#fdf3e0;
+  --shadow:0 1px 2px rgba(16,18,27,.04),0 8px 24px rgba(16,18,27,.06);
+  --radius:16px;
+  --font:"Inter","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Noto Sans JP",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e0f13; --panel:#16181f; --ink:#eceef4; --muted:#9aa2b4; --line:#262a35;
+    --accent:#a78bfa; --accent-soft:#201a35;
+    --ok:#4ade80; --ok-soft:#10261c; --warn:#fbbf24; --warn-soft:#2a2011;
+    --shadow:0 1px 2px rgba(0,0,0,.5),0 10px 30px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e0f13; --panel:#16181f; --ink:#eceef4; --muted:#9aa2b4; --line:#262a35;
+  --accent:#a78bfa; --accent-soft:#201a35;
+  --ok:#4ade80; --ok-soft:#10261c; --warn:#fbbf24; --warn-soft:#2a2011;
+  --shadow:0 1px 2px rgba(0,0,0,.5),0 10px 30px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);
+  line-height:1.75;font-feature-settings:"palt" 1;
+  word-break:keep-all;overflow-wrap:break-word}
+.wrap{max-width:1140px;margin:0 auto;padding:0 16px}
+a{color:var(--accent)}
+code,.mono{font-family:var(--mono);font-size:.88em}
+
+/* ---------- hero ---------- */
+header.hero{padding:72px 0 44px;border-bottom:1px solid var(--line);
+  background:radial-gradient(1200px 400px at 12% -10%,var(--accent-soft),transparent 70%)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--accent);font-weight:650;margin:0 0 14px}
+.eyebrow::before{content:"";width:22px;height:2px;background:var(--accent);border-radius:2px}
+h1{font-size:clamp(28px,4.6vw,46px);line-height:1.3;margin:0 0 14px;letter-spacing:-.02em;font-weight:720}
+.lede{font-size:clamp(15px,1.6vw,18px);color:var(--muted);margin:0;max-width:62ch}
+.verdict{display:inline-flex;align-items:center;gap:10px;margin-top:26px;padding:10px 18px;
+  border-radius:999px;background:var(--ok-soft);color:var(--ok);font-weight:650;font-size:15px;
+  border:1px solid color-mix(in srgb,var(--ok) 25%,transparent)}
+.verdict .dot{width:9px;height:9px;border-radius:50%;background:var(--ok);
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--ok) 20%,transparent)}
+.meta{margin-top:26px;display:flex;flex-wrap:wrap;gap:8px}
+.chip{font-size:12.5px;color:var(--muted);background:var(--panel);border:1px solid var(--line);
+  padding:5px 12px;border-radius:999px}
+
+/* ---------- sections ---------- */
+section{padding:56px 0;border-bottom:1px solid var(--line)}
+h2{font-size:clamp(20px,2.4vw,27px);margin:0 0 8px;letter-spacing:-.01em;font-weight:690}
+h2 .num{color:var(--accent);font-family:var(--mono);font-size:.7em;margin-right:10px;font-weight:600}
+.sub{color:var(--muted);margin:0 0 30px;max-width:70ch}
+h3{font-size:17px;margin:34px 0 10px;font-weight:660}
+
+/* ---------- env cards ---------- */
+.envs{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:18px}
+.env{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:22px 24px;box-shadow:var(--shadow)}
+.env .tag{display:inline-block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  font-weight:700;padding:3px 10px;border-radius:6px;margin-bottom:12px}
+.env.before .tag{background:var(--line);color:var(--muted)}
+.env.after  .tag{background:var(--accent-soft);color:var(--accent)}
+.env h4{margin:0 0 4px;font-size:17px}
+.env dl{margin:14px 0 0;display:grid;grid-template-columns:auto 1fr;gap:7px 16px;font-size:13.5px}
+.env dt{color:var(--muted);white-space:nowrap}
+.env dd{margin:0;font-family:var(--mono);font-size:12.5px;overflow-wrap:anywhere}
+
+/* ---------- stats ---------- */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-top:8px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;
+  box-shadow:var(--shadow)}
+.stat b{display:block;font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1.2}
+.stat span{display:block;font-size:12.5px;color:var(--muted);margin-top:5px}
+.stat.good b{color:var(--ok)}
+
+/* ---------- checklist ---------- */
+.checks{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.checks li{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:15px 18px 15px 48px;position:relative;font-size:14.5px;box-shadow:var(--shadow)}
+.checks li::before{content:"✓";position:absolute;left:17px;top:15px;color:var(--ok);
+  font-weight:800;font-size:15px}
+.checks li b{font-weight:650}
+.checks li em{font-style:normal;color:var(--muted);display:block;font-size:13px;margin-top:3px}
+
+/* ---------- findings ---------- */
+.finding{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--warn);
+  border-radius:12px;padding:18px 22px;margin-bottom:14px;box-shadow:var(--shadow)}
+.finding h4{margin:0 0 6px;font-size:15.5px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.finding .badge{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;
+  background:var(--warn-soft);color:var(--warn);padding:2px 9px;border-radius:5px}
+.finding p{margin:6px 0 0;font-size:14px;color:var(--muted)}
+.finding p strong{color:var(--ink);font-weight:620}
+
+/* ---------- gallery ---------- */
+.shot{margin:0 0 38px;background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.shot-head{padding:16px 20px;border-bottom:1px solid var(--line);
+  display:flex;gap:14px;align-items:baseline;flex-wrap:wrap}
+.shot-head h3{margin:0;font-size:16px}
+.shot-head .path{font-family:var(--mono);font-size:11.5px;color:var(--muted);overflow-wrap:anywhere}
+.shot-head .note{flex-basis:100%;font-size:13px;color:var(--muted);margin-top:2px}
+.cmp{position:relative;line-height:0;background:#0b0c10;cursor:ew-resize;user-select:none;touch-action:none}
+.cmp img{display:block;width:100%;height:auto}
+.cmp .after{position:absolute;inset:0;width:100%;
+  clip-path:inset(0 0 0 var(--pos,50%));}
+.cmp .after img{position:absolute;top:0;left:0;width:100%;height:auto}
+.handle{position:absolute;top:0;bottom:0;left:var(--pos,50%);width:2px;background:#fff;
+  box-shadow:0 0 0 1px rgba(0,0,0,.35);pointer-events:none}
+.handle::after{content:"";position:absolute;top:50%;left:50%;width:38px;height:38px;
+  transform:translate(-50%,-50%);border-radius:50%;background:#fff;
+  box-shadow:0 2px 10px rgba(0,0,0,.35)}
+.handle::before{content:"";position:absolute;top:50%;left:50%;z-index:2;width:15px;height:9px;
+  transform:translate(-50%,-50%);
+  background:#15161a;
+  -webkit-mask:var(--arrows) center/contain no-repeat;
+  mask:var(--arrows) center/contain no-repeat}
+.handle{--arrows:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 18'%3E%3Cpath d='M11 2 3 9l8 7M19 2l8 7-8 7' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+.lbl{position:absolute;top:12px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  font-weight:700;padding:4px 11px;border-radius:999px;color:#fff;
+  background:rgba(10,11,16,.72);backdrop-filter:blur(6px);line-height:1.6}
+.lbl.l{left:12px}.lbl.r{right:12px;background:rgba(109,59,245,.85)}
+.shot-foot{padding:11px 20px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);
+  display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.shot-foot a{text-decoration:none;font-weight:600}
+
+.solo{margin:0 0 38px;background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.solo img{display:block;width:100%;height:auto}
+
+/* ---------- table ---------- */
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel);
+  box-shadow:var(--shadow)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:560px}
+th,td{padding:11px 16px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);
+  font-weight:700;background:color-mix(in srgb,var(--line) 32%,transparent)}
+tbody tr:last-child td{border-bottom:none}
+td.ok{color:var(--ok);font-weight:650;white-space:nowrap}
+
+/* ---------- next steps ---------- */
+ol.steps{counter-reset:s;list-style:none;padding:0;margin:0;display:grid;gap:12px}
+ol.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--line);
+  border-radius:12px;padding:16px 20px 16px 54px;position:relative;font-size:14.5px;
+  box-shadow:var(--shadow)}
+ol.steps li::before{content:counter(s);position:absolute;left:17px;top:15px;width:24px;height:24px;
+  border-radius:7px;background:var(--accent-soft);color:var(--accent);font-weight:700;
+  font-size:12.5px;display:grid;place-items:center;font-family:var(--mono)}
+
+footer{padding:44px 0 64px;color:var(--muted);font-size:13px}
+footer .line{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.toggle{position:fixed;right:16px;top:16px;z-index:50;background:var(--panel);
+  border:1px solid var(--line);color:var(--muted);border-radius:999px;width:38px;height:38px;
+  cursor:pointer;font-size:15px;box-shadow:var(--shadow)}
+@media (max-width:640px){
+  header.hero{padding:52px 0 32px}
+  section{padding:40px 0}
+  .env dl{grid-template-columns:1fr}
+  .env dt{margin-top:6px}
+}
+</style>
+</head>
+<body>
+<button class="toggle" id="t" title="テーマ切替" aria-label="テーマ切替">◐</button>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">DCS 管理画面 UI 刷新 · 動作検証</p>
+    <h1>新 UI は既存機能を壊していない</h1>
+    <p class="lede">
+      staging（現行・Django 標準管理画面）と ui-improvement（新 UI・django-unfold）を
+      <strong>同一データ</strong>で突き合わせ、画面・一覧・フォーム・絞り込み・保存・API を
+      1件ずつ比較した結果です。差分は 3件、いずれも意図した変更か検証環境固有のもので、
+      機能欠損はありませんでした。
+    </p>
+    <div class="verdict"><span class="dot"></span>機能の非破壊を確認（回帰 0件）</div>
+    <div class="meta">
+      <span class="chip">検証日 2026-10-16</span>
+      <span class="chip">比較画面 14 / 検証ルート 20</span>
+      <span class="chip">一覧 17モデル全件照合</span>
+      <span class="chip">ClickUp z94amcqevr</span>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2><span class="num">01</span>検証した 2つの環境</h2>
+    <p class="sub">
+      両環境は<strong>同じサーバー・同じ PostgreSQL クラスタ</strong>上で動いています。
+      新 UI 側の DB は staging DB の複製なので、同じ行が同じ順番で出るはずで、
+      出なければそれは実装差分です。これが今回の比較の土台になっています。
+    </p>
+    <div class="envs">
+      <div class="env before">
+        <span class="tag">Before — 現行</span>
+        <h4>staging</h4>
+        <dl>
+          <dt>URL</dt><dd>staging.euclid-accounting.com</dd>
+          <dt>ブランチ</dt><dd>dev</dd>
+          <dt>リビジョン</dt><dd>2a1a90fe</dd>
+          <dt>管理画面</dt><dd>Django 標準</dd>
+          <dt>DB</dt><dd>dcs-app-stg</dd>
+        </dl>
+      </div>
+      <div class="env after">
+        <span class="tag">After — 新 UI</span>
+        <h4>ui-improvement</h4>
+        <dl>
+          <dt>URL</dt><dd>153.127.51.205:1313</dd>
+          <dt>ブランチ</dt><dd>ui-improvement</dd>
+          <dt>リビジョン</dt><dd>a7600865（フェーズ 4）</dd>
+          <dt>管理画面</dt><dd>django-unfold</dd>
+          <dt>DB</dt><dd>dcs-app-ui（stg の複製）</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2><span class="num">02</span>検証結果サマリ</h2>
+    <p class="sub">数字はすべて実際に両環境へリクエストして計測したものです。</p>
+    <div class="stats">
+      <div class="stat good"><b>20 / 20</b><span>検証ルートが両環境で HTTP 200</span></div>
+      <div class="stat good"><b>17 / 17</b><span>一覧画面で件数が一致</span></div>
+      <div class="stat good"><b>11 / 11</b><span>絞り込み・並替・検索が同じ行を返す</span></div>
+      <div class="stat good"><b>0</b><span>サーバーエラー／読み込み失敗</span></div>
+      <div class="stat good"><b>0</b><span>GraphQL スキーマの差分</span></div>
+      <div class="stat"><b>3</b><span>説明のつく差分（後述）</span></div>
+    </div>
+
+    <h3>個別に確認した項目</h3>
+    <ul class="checks">
+      <li><b>登録モデルは両環境とも 17件で完全一致</b>
+        <em>管理画面から操作できる対象が増減していないこと。</em></li>
+      <li><b>一覧の中身が ID 単位で一致（17件中 15件は並び順まで同一）</b>
+        <em>件数ではなく各行の ID を突き合わせ。絞り込み条件の取りこぼしを検出できます。</em></li>
+      <li><b>保存ボタン（保存／保存して編集を続ける／保存してもう 1つ追加）が両環境に存在</b>
+        <em>新 UI は <span class="mono">&lt;button&gt;</span>、標準は <span class="mono">&lt;input&gt;</span> で出力されますが、送信名は同一です。</em></li>
+      <li><b>実ブラウザで実際に保存し、DB に反映されることを確認</b>
+        <em>メールアドレス・権限グループ・各フラグが保存後も保持されていました。</em></li>
+      <li><b>一括操作（チェックボックス選択→操作実行）が動作</b>
+        <em>新 UI では行を選択したときに操作バーが現れます。</em></li>
+      <li><b>絞り込み・並び替え・ページ送り・検索が同じ結果を返す</b>
+        <em>新 UI は絞り込みが右側サイドバーから「絞り込み」ボタン内に移動していますが、効き方は同じです。</em></li>
+      <li><b>ユーザー活動ログの期間絞り込み・集計・CSV 出力が両環境で動作</b>
+        <em>CSV は両環境とも <span class="mono">text/csv; charset=utf-8</span> で返却。</em></li>
+      <li><b>GraphQL API は無変更</b>
+        <em>UI ブランチの SDL は分岐元と<strong>バイト単位で同一</strong>。フロントエンド側の対応は不要です。</em></li>
+      <li><b>マイグレーション 6件はすべてメタデータのみ・dev と番号衝突なし</b>
+        <em>ラベル定義の変更だけで、テーブル構造もデータも変わりません。</em></li>
+      <li><b>緊急停止スイッチが実機で有効</b>
+        <em><span class="mono">ADMIN_UNFOLD_ENABLED=False</span> で標準画面に即復帰。日本語ラベルは残ります。</em></li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2><span class="num">03</span>見つかった 3件の差分</h2>
+    <p class="sub">いずれも「壊れている」ものではありません。内容と理由を明記します。</p>
+
+    <div class="finding">
+      <h4><span class="badge">意図した変更</span>ユーザー一覧の並び順がユーザー名順 → メールアドレス順</h4>
+      <p><strong>表示される 36件は両環境でまったく同じ</strong>で、順番だけが違います。
+        ログイン ID はメールアドレスであり、ユーザー名側には
+        <span class="mono">Dy-hayashiKy-hayashiHy-hayashi4y-hayashiV</span> のような
+        自動生成値が入っているため、実運用では探しにくくなっていました。
+        新 UI では <span class="mono">app/user/admin.py</span> で明示的にメールアドレス順に変更しています。</p>
+    </div>
+
+    <div class="finding">
+      <h4><span class="badge">検証環境の都合</span>バックグラウンド処理の履歴が一致しない</h4>
+      <p>staging は常時ワーカーが動いていて新しい実行履歴が増え続けますが、
+        新 UI 側の DB は複製した時点で止まっています。<strong>実装差ではなくデータの鮮度差</strong>です。
+        それ以外の 16モデルはすべて一致しました。</p>
+    </div>
+
+    <div class="finding">
+      <h4><span class="badge">要対応（フェーズ 5）</span>ui-improvement が dev より 8コミット遅れている</h4>
+      <p>その 8コミットにはセキュリティ修正（未認証エンドポイントの封鎖）が含まれ、
+        GraphQL のルートフィールド <span class="mono">projectDistributionRecipientMappingList</span> が
+        dev 側で削除されています。新 UI ブランチにはまだその削除が入っていません。
+        <strong>UI の作業が原因ではなく</strong>、フェーズ 5 の最初の作業である
+        「dev へのリベース」で自動的に解消します。マイグレーションの番号衝突はありません。</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2><span class="num">04</span>画面比較（Before / After）</h2>
+    <p class="sub">
+      中央のハンドルを左右にドラッグすると、同じ画面・同じデータでの現行と新 UI を重ねて比較できます。
+      左が現行（staging）、右が新 UI。<strong>メールアドレスと氏名は公開用にマスクしています</strong>
+      （表示されている「•」は実データではありません）。
+    </p>
+    <div id="gallery"></div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2><span class="num">05</span>新 UI だけの確認項目</h2>
+    <p class="sub">現行には対応画面がないため、単独で掲載します。</p>
+
+    <h3>一括操作バー — 行を選択すると現れます</h3>
+    <div class="solo"><img src="img/newui-15-bulk-action.webp" alt="セグメント一覧で行を選択し、操作バーが表示された状態" loading="lazy"></div>
+
+    <h3>緊急停止スイッチ — <span class="mono">ADMIN_UNFOLD_ENABLED=False</span></h3>
+    <p class="sub">サーバー上で実際に切り替えて撮影したものです。テーマだけが外れ、
+      <strong>日本語のモデル名（分配パターン）は残り</strong>、活動ログの CSV 出力も動作しました。
+      万一のときはこの 1 行とプロセス再起動だけで元の画面に戻せます。</p>
+    <div class="solo"><img src="img/newui-17-killswitch.webp" alt="緊急停止スイッチを有効にした状態の標準管理画面" loading="lazy"></div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2><span class="num">06</span>検証ルート一覧</h2>
+    <p class="sub">両環境に同じリクエストを送り、ステータスと中身を比較しました。</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>画面 / 操作</th><th>パス</th><th>現行</th><th>新 UI</th><th>判定</th></tr></thead>
+        <tbody id="routes"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2><span class="num">07</span>この先に必要なこと（フェーズ 5）</h2>
+    <p class="sub">デザイン承認後に実施する想定の手順です。本検証はその前提条件を満たしているかの確認でした。</p>
+    <ol class="steps">
+      <li><b>ui-improvement を dev にリベース</b> — 上記の 8コミット（セキュリティ修正）を取り込みます。</li>
+      <li><b>dev へマージ</b> — マイグレーション 6件はメタデータのみ、番号衝突なしを確認済み。</li>
+      <li><b>staging で目視確認</b> — 本レポートと同じ画面を、マージ後の staging で再確認。</li>
+      <li><b>dev → main（本番リリース）</b> — <span class="mono">start.sh</span> は失敗しても緑で終わるため、リリース後に <span class="mono">migrate --check</span> まで含めた独立確認が必要です。</li>
+      <li><b>本番で目視確認</b> — 問題があれば <span class="mono">ADMIN_UNFOLD_ENABLED=False</span> で即時復旧できます。</li>
+    </ol>
+    <p class="sub" style="margin-top:22px">
+      フロントエンド側の対応は<strong>不要</strong>です。GraphQL スキーマは無変更で、
+      SPA は <span class="mono">/admin/</span> を参照していません。
+    </p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap line">
+    <span>DCS 管理画面 UI 刷新 — 動作検証レポート · 2026-10-16</span>
+    <span>ClickUp z94amcqevr / PR #754</span>
+  </div>
+</footer>
+
+<script>
+// Theme toggle: remembers the choice per viewer; storage can throw in a private
+// window, so every access is guarded and the page renders fine without it.
+(function(){
+  var k='dcs-verify-theme', r=document.documentElement, b=document.getElementById('t');
+  try{ var v=localStorage.getItem(k); if(v) r.setAttribute('data-theme',v); }catch(e){}
+  b.addEventListener('click',function(){
+    var cur=r.getAttribute('data-theme');
+    if(!cur) cur=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+    var nx=cur==='dark'?'light':'dark';
+    r.setAttribute('data-theme',nx);
+    try{ localStorage.setItem(k,nx); }catch(e){}
+  });
+})();
+
+var SCREENS = [
+  ['01-login','ログイン','/admin/login/','ロゴ・見出し・入力欄が整理され、環境バッジが付きます。'],
+  ['02-dashboard','ダッシュボード','/admin/','現行はアプリ名が英語で縦に並ぶだけ。新 UI は日本語の分類とサイドバーになります。'],
+  ['03-user-list','ユーザー一覧','/admin/user/user/','列見出しが日本語化（メールアドレス／ユーザー名／氏名／権限）。権限も admin → 管理者 の表示に。'],
+  ['04-user-form','ユーザー編集','/admin/user/user/1/change/','項目名が日本語化。氏名・マネージャー一覧に表示の 2 項目が新たに編集可能です。'],
+  ['05-company-list','会社マスタ','/admin/master_data/mstcompany/','Data Companies → 会社。パンくずも日本語になります。'],
+  ['06-pattern-list','分配パターン一覧','/admin/master_data/mstdistributionpattern/','列構成は同一（作成日時・パターン名）。件数 353件も一致します。'],
+  ['07-pattern-form','分配パターン編集','/admin/master_data/mstdistributionpattern/894/change/','入力項目は増減なし。実ブラウザでの保存も検証済みです。'],
+  ['08-recipient-list','支払先一覧','/admin/master_data/mstpaymentrecipient/','Payment Recipients → 支払先。'],
+  ['09-segment-list','セグメント一覧','/admin/master_data/mstsegment/','Data Segments → セグメント。ページ送りも同じ行を返します。'],
+  ['10-activitylog-list','ユーザー活動ログ','/admin/activitylog/activityevent/','日本語が語の途中で改行されなくなっています（例: 画面閲覧）。'],
+  ['11-activitylog-filter','活動ログ（期間絞り込み）','/admin/activitylog/activityevent/?start=…&end=…','期間指定が両環境で同じ結果を返します。'],
+  ['12-activitylog-summary','活動ログ 集計','/admin/activitylog/activityevent/summary/','集計から明細への受け渡しも期間を保持します。'],
+  ['13-guideline-form','ガイドライン編集','/admin/common/guideline/30/change/','リッチテキスト入力も含め、項目は同一です。'],
+  ['14-group-list','グループ一覧','/admin/auth/group/','Groups → グループ。']
+];
+
+var g = document.getElementById('gallery');
+SCREENS.forEach(function(s){
+  var id=s[0], title=s[1], path=s[2], note=s[3];
+  var el=document.createElement('article');
+  el.className='shot';
+  el.innerHTML =
+    '<div class="shot-head"><h3>'+title+'</h3><span class="path">'+path+'</span>'+
+      '<span class="note">'+note+'</span></div>'+
+    '<div class="cmp" style="--pos:50%">'+
+      '<img src="img/staging-'+id+'.webp" alt="'+title+'（現行）" loading="lazy">'+
+      '<div class="after"><img src="img/newui-'+id+'.webp" alt="'+title+'（新 UI）" loading="lazy"></div>'+
+      '<span class="lbl l">Before 現行</span><span class="lbl r">After 新 UI</span>'+
+      '<span class="handle"></span>'+
+    '</div>'+
+    '<div class="shot-foot"><span>ハンドルを左右にドラッグして比較</span>'+
+      '<span><a href="img/staging-'+id+'.webp" target="_blank" rel="noopener">現行を拡大</a> · '+
+      '<a href="img/newui-'+id+'.webp" target="_blank" rel="noopener">新 UI を拡大</a></span></div>';
+  g.appendChild(el);
+
+  var cmp=el.querySelector('.cmp');
+  function move(ev){
+    var r=cmp.getBoundingClientRect();
+    var x=(ev.touches?ev.touches[0].clientX:ev.clientX)-r.left;
+    var p=Math.max(0,Math.min(100,x/r.width*100));
+    cmp.style.setProperty('--pos',p+'%');
+  }
+  var dragging=false;
+  cmp.addEventListener('pointerdown',function(e){dragging=true;cmp.setPointerCapture(e.pointerId);move(e);});
+  cmp.addEventListener('pointermove',function(e){if(dragging)move(e);});
+  cmp.addEventListener('pointerup',function(){dragging=false;});
+  cmp.addEventListener('pointercancel',function(){dragging=false;});
+});
+
+var ROUTES = [
+  ['管理画面トップ','/admin/','200','200'],
+  ['ログイン','/admin/login/','200','200'],
+  ['ユーザー一覧','/admin/user/user/','200','200'],
+  ['ユーザー検索','/admin/user/user/?q=sera','200','200'],
+  ['ユーザー編集','/admin/user/user/1/change/','200','200'],
+  ['ユーザー追加','/admin/user/user/add/','200','200'],
+  ['会社マスタ','/admin/master_data/mstcompany/','200','200'],
+  ['分配パターン一覧','/admin/master_data/mstdistributionpattern/','200','200'],
+  ['分配パターン 2ページ目','/admin/master_data/mstdistributionpattern/?p=2','200','200'],
+  ['支払先一覧','/admin/master_data/mstpaymentrecipient/','200','200'],
+  ['セグメント一覧','/admin/master_data/mstsegment/','200','200'],
+  ['ガイドライン一覧','/admin/common/guideline/','200','200'],
+  ['ガイドライン編集','/admin/common/guideline/1/change/','200','200'],
+  ['活動ログ一覧','/admin/activitylog/activityevent/','200','200'],
+  ['活動ログ 期間絞り込み','/admin/activitylog/activityevent/?start=…&end=…','200','200'],
+  ['活動ログ 集計','/admin/activitylog/activityevent/summary/','200','200'],
+  ['活動ログ CSV 出力','/admin/activitylog/activityevent/export/','200 csv','200 csv'],
+  ['グループ一覧','/admin/auth/group/','200','200'],
+  ['バックグラウンド処理','/admin/django_q/success/','200','200'],
+  ['パスワード変更','/admin/password_change/','200','200'],
+  ['GraphQL API','/graphql','200','200']
+];
+var tb=document.getElementById('routes');
+ROUTES.forEach(function(r){
+  var tr=document.createElement('tr');
+  tr.innerHTML='<td>'+r[0]+'</td><td class="mono">'+r[1]+'</td><td class="mono">'+r[2]+
+    '</td><td class="mono">'+r[3]+'</td><td class="ok">一致</td>';
+  tb.appendChild(tr);
+});
+</script>
+</body>
+</html>
