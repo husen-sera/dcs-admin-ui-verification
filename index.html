@@ -101,6 +101,38 @@ h3{font-size:17px;margin:34px 0 10px;font-weight:660}
 .finding p{margin:6px 0 0;font-size:14px;color:var(--muted)}
 .finding p strong{color:var(--ink);font-weight:620}
 
+/* ---------- sticky section nav ---------- */
+html{scroll-behavior:smooth}
+section{scroll-margin-top:72px}
+.topnav{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.topnav .wrap{display:flex;gap:4px;align-items:center;overflow-x:auto;
+  scrollbar-width:none;padding-top:9px;padding-bottom:9px}
+.topnav .wrap::-webkit-scrollbar{display:none}
+.topnav .brand{font-size:12.5px;font-weight:680;margin-right:12px;white-space:nowrap}
+.topnav a{font-size:13px;color:var(--muted);text-decoration:none;padding:5px 11px;
+  border-radius:8px;white-space:nowrap}
+.topnav a:hover{background:var(--accent-soft);color:var(--accent)}
+
+/* ---------- screen picker ---------- */
+/* Fourteen full-size comparisons stacked made the page 23 screens tall, so the
+   wheel barely moved it. One viewer plus a picker keeps the page short. */
+.picker{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 22px}
+.picker button{font:inherit;font-size:13px;color:var(--muted);background:var(--panel);
+  border:1px solid var(--line);border-radius:999px;padding:6px 14px;cursor:pointer;
+  display:inline-flex;gap:8px;align-items:baseline;transition:background .12s,color .12s}
+.picker button .n{font-family:var(--mono);font-size:11px;opacity:.65}
+.picker button:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.picker button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);
+  color:#fff;font-weight:620}
+.picker button[aria-selected="true"] .n{opacity:.8}
+.pager{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:-18px}
+.pager button{font:inherit;font-size:13.5px;font-weight:600;color:var(--accent);
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:8px 16px;cursor:pointer}
+.pager button:hover{background:var(--accent-soft)}
+.pager #counter{font-size:13px;color:var(--muted);font-family:var(--mono)}
+
 /* ---------- gallery ---------- */
 .shot{margin:0 0 38px;background:var(--panel);border:1px solid var(--line);
   border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
@@ -178,6 +210,19 @@ footer .line{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 <body>
 <button class="toggle" id="t" title="Toggle theme" aria-label="Toggle theme">◐</button>
 
+<nav class="topnav" aria-label="Sections">
+  <div class="wrap">
+    <span class="brand">DCS admin verification</span>
+    <a href="#environments">Environments</a>
+    <a href="#results">Results</a>
+    <a href="#differences">Differences</a>
+    <a href="#screens">Screens</a>
+    <a href="#extras">Kill switch</a>
+    <a href="#routes">Routes</a>
+    <a href="#next-steps">Next steps</a>
+  </div>
+</nav>
+
 <header class="hero">
   <div class="wrap">
     <p class="eyebrow">DCS admin re-skin · functional verification</p>
@@ -199,7 +244,7 @@ footer .line{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
   </div>
 </header>
 
-<section>
+<section id="environments">
   <div class="wrap">
     <h2><span class="num">01</span>The two environments</h2>
     <p class="sub">
@@ -235,7 +280,7 @@ footer .line{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
   </div>
 </section>
 
-<section>
+<section id="results">
   <div class="wrap">
     <h2><span class="num">02</span>Results at a glance</h2>
     <p class="sub">Every number below was measured by sending the same request to both environments.</p>
@@ -274,7 +319,7 @@ footer .line{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
   </div>
 </section>
 
-<section>
+<section id="differences">
   <div class="wrap">
     <h2><span class="num">03</span>The three differences</h2>
     <p class="sub">None of these is something that broke. Here is what each one is and why it is there.</p>
@@ -307,20 +352,27 @@ footer .line{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
   </div>
 </section>
 
-<section>
+<section id="screens">
   <div class="wrap">
     <h2><span class="num">04</span>Screen comparison</h2>
     <p class="sub">
-      Drag the handle, or use the slider under each image, to wipe between the two.
-      Left is the current admin, right is the new UI — same screen, same data.
+      <strong>Pick a screen below</strong>, then drag the handle — or use the slider under the
+      image — to wipe between the two. Left is the current admin, right is the new UI:
+      same screen, same data.
       <strong>Email addresses and personal names were masked before publishing</strong>;
       the dots you see are not real values.
     </p>
+    <div class="picker" id="picker" role="tablist" aria-label="Screens"></div>
     <div id="gallery"></div>
+    <div class="pager">
+      <button id="shotPrev" type="button">&larr; Previous</button>
+      <span id="counter" aria-live="polite"></span>
+      <button id="shotNext" type="button">Next &rarr;</button>
+    </div>
   </div>
 </section>
 
-<section>
+<section id="extras">
   <div class="wrap">
     <h2><span class="num">05</span>New-UI-only checks</h2>
     <p class="sub">These have no counterpart on the current admin, so they are shown on their own.</p>
@@ -339,20 +391,20 @@ footer .line{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
   </div>
 </section>
 
-<section>
+<section id="routes">
   <div class="wrap">
     <h2><span class="num">06</span>Routes checked</h2>
     <p class="sub">The same request was sent to both environments and the responses compared.</p>
     <div class="tablewrap">
       <table>
         <thead><tr><th>Screen / action</th><th>Path</th><th>Current</th><th>New UI</th><th>Result</th></tr></thead>
-        <tbody id="routes"></tbody>
+        <tbody id="routesBody"></tbody>
       </table>
     </div>
   </div>
 </section>
 
-<section>
+<section id="next-steps">
   <div class="wrap">
     <h2><span class="num">07</span>What happens next (phase 5)</h2>
     <p class="sub">To be done once the design is approved. This verification was about confirming the preconditions are in place.</p>
@@ -410,49 +462,88 @@ var SCREENS = [
 ];
 
 var g = document.getElementById('gallery');
-SCREENS.forEach(function(s, i){
-  var id=s[0], title=s[1], path=s[2], note=s[3];
-  var el=document.createElement('article');
-  el.className='shot';
-  el.innerHTML =
-    '<div class="shot-head"><h3>'+title+'</h3><span class="path">'+path+'</span>'+
-      '<span class="note">'+note+'</span></div>'+
-    '<div class="cmp" style="--pos:50%">'+
-      '<img src="img/staging-'+id+'.webp" width="1440" height="1000" alt="'+title+' — current admin" loading="lazy">'+
-      '<div class="after"><img src="img/newui-'+id+'.webp" width="1440" height="1000" alt="'+title+' — new UI" loading="lazy"></div>'+
-      '<span class="lbl l">Before · current</span><span class="lbl r">After · new UI</span>'+
-      '<span class="handle"></span>'+
-    '</div>'+
-    '<div class="shot-foot">'+
-      '<input class="slider" type="range" min="0" max="100" value="50" '+
-        'aria-label="Reveal more of the new UI for '+title+'">'+
-      '<span class="links"><a href="img/staging-'+id+'.webp" target="_blank" rel="noopener">open current</a> · '+
-      '<a href="img/newui-'+id+'.webp" target="_blank" rel="noopener">open new UI</a></span></div>';
-  g.appendChild(el);
+var picker = document.getElementById('picker');
+var counter = document.getElementById('counter');
+var current = -1;
 
-  var cmp=el.querySelector('.cmp'), range=el.querySelector('.slider');
+SCREENS.forEach(function(s, i){
+  var b = document.createElement('button');
+  b.type = 'button';
+  b.setAttribute('role','tab');
+  b.setAttribute('aria-selected','false');
+  b.innerHTML = '<span class="n">' + String(i + 1).padStart(2,'0') + '</span>' + s[1];
+  b.addEventListener('click', function(){ show(i); });
+  picker.appendChild(b);
+});
+
+function show(i, keepPos){
+  if (i === current) return;
+  var pos = keepPos == null ? 50 : keepPos;
+  var s = SCREENS[i], id = s[0], title = s[1], path = s[2], note = s[3];
+  current = i;
+  [].forEach.call(picker.children, function(b, n){
+    b.setAttribute('aria-selected', n === i ? 'true' : 'false');
+  });
+  counter.textContent = (i + 1) + ' / ' + SCREENS.length;
+
+  g.innerHTML =
+    '<article class="shot">' +
+      '<div class="shot-head"><h3>' + title + '</h3><span class="path">' + path + '</span>' +
+        '<span class="note">' + note + '</span></div>' +
+      '<div class="cmp" style="--pos:' + pos + '%">' +
+        '<img src="img/staging-' + id + '.webp" width="1440" height="1000" alt="' + title + ' — current admin">' +
+        '<div class="after"><img src="img/newui-' + id + '.webp" width="1440" height="1000" alt="' + title + ' — new UI"></div>' +
+        '<span class="lbl l">Before · current</span><span class="lbl r">After · new UI</span>' +
+        '<span class="handle"></span>' +
+      '</div>' +
+      '<div class="shot-foot">' +
+        '<input class="slider" type="range" min="0" max="100" value="' + pos + '" ' +
+          'aria-label="Reveal more of the new UI">' +
+        '<span class="links"><a href="img/staging-' + id + '.webp" target="_blank" rel="noopener">open current</a> · ' +
+        '<a href="img/newui-' + id + '.webp" target="_blank" rel="noopener">open new UI</a></span></div>' +
+    '</article>';
+
+  var cmp = g.querySelector('.cmp'), range = g.querySelector('.slider');
   function set(p){
-    p=Math.max(0,Math.min(100,p));
-    cmp.style.setProperty('--pos',p+'%');
-    if(range.value!=p) range.value=p;
+    p = Math.max(0, Math.min(100, p));
+    cmp.style.setProperty('--pos', p + '%');
+    if (range.value != p) range.value = p;
   }
   function fromEvent(ev){
-    var r=cmp.getBoundingClientRect();
-    set((ev.clientX-r.left)/r.width*100);
+    var r = cmp.getBoundingClientRect();
+    set((ev.clientX - r.left) / r.width * 100);
   }
-  range.addEventListener('input',function(){ set(+range.value); });
+  range.addEventListener('input', function(){ set(+range.value); });
 
-  // Pointer dragging is for mouse and pen only. On touch, a drag gesture is the
-  // page scrolling, so a tap moves the divider and the swipe is left alone.
-  var dragging=false;
-  cmp.addEventListener('pointerdown',function(e){
-    if(e.pointerType==='touch'){ fromEvent(e); return; }
-    dragging=true; cmp.setPointerCapture(e.pointerId); fromEvent(e);
+  // Pointer dragging is for mouse and pen only. On touch a drag is the page
+  // scrolling, so a tap moves the divider and the swipe is left alone.
+  var dragging = false;
+  cmp.addEventListener('pointerdown', function(e){
+    if (e.pointerType === 'touch'){ fromEvent(e); return; }
+    dragging = true; cmp.setPointerCapture(e.pointerId); fromEvent(e);
   });
-  cmp.addEventListener('pointermove',function(e){ if(dragging) fromEvent(e); });
-  cmp.addEventListener('pointerup',function(){ dragging=false; });
-  cmp.addEventListener('pointercancel',function(){ dragging=false; });
+  cmp.addEventListener('pointermove', function(e){ if (dragging) fromEvent(e); });
+  cmp.addEventListener('pointerup', function(){ dragging = false; });
+  cmp.addEventListener('pointercancel', function(){ dragging = false; });
+
+  // Warm the next screen so stepping through feels instant.
+  var nxt = SCREENS[(i + 1) % SCREENS.length][0];
+  ['staging-', 'newui-'].forEach(function(pre){ new Image().src = 'img/' + pre + nxt + '.webp'; });
+}
+
+function step(d){
+  var pos = 50, r = g.querySelector('.slider');
+  if (r) pos = +r.value;                       // keep the wipe where the reader left it
+  show((current + d + SCREENS.length) % SCREENS.length, pos);
+}
+document.getElementById('shotPrev').addEventListener('click', function(){ step(-1); });
+document.getElementById('shotNext').addEventListener('click', function(){ step(1); });
+document.addEventListener('keydown', function(e){
+  if (e.target.matches('input,textarea,select')) return;
+  if (e.key === 'ArrowLeft') step(-1);
+  if (e.key === 'ArrowRight') step(1);
 });
+show(0);
 
 var ROUTES = [
   ['Admin home','/admin/','200','200'],
@@ -477,7 +568,7 @@ var ROUTES = [
   ['Password change','/admin/password_change/','200','200'],
   ['GraphQL API','/graphql','200','200']
 ];
-var tb=document.getElementById('routes');
+var tb=document.getElementById('routesBody');
 ROUTES.forEach(function(r){
   var tr=document.createElement('tr');
   tr.innerHTML='<td>'+r[0]+'</td><td class="mono">'+r[1]+'</td><td class="mono">'+r[2]+
