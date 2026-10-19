@@ -222,6 +222,7 @@ footer .line{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
     <a href="#differences">Differences</a>
     <a href="#screens">Screens</a>
     <a href="#extras">Kill switch</a>
+    <a href="#since">Since</a>
     <a href="#routes">Routes</a>
     <a href="#next-steps">Next steps</a>
   </div>
@@ -240,10 +241,11 @@ footer .line{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
     </p>
     <div class="verdict"><span class="dot"></span>No functional regressions found</div>
     <div class="meta">
-      <span class="chip">Verified 2026-10-16</span>
+      <span class="chip">Verified 2026-10-16 · updated 2026-10-19</span>
       <span class="chip">14 screens compared · 20 routes checked</span>
       <span class="chip">All 17 admin models reconciled</span>
       <span class="chip">ClickUp z94amcqevr</span>
+      <span class="chip">+6 slices since — section 06</span>
     </div>
   </div>
 </header>
@@ -395,9 +397,54 @@ footer .line{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
   </div>
 </section>
 
+<section id="since">
+  <div class="wrap">
+    <h2><span class="num">06</span>What was added after this verification</h2>
+    <p class="sub">
+      The comparison above was taken on 2026-10-16, at phase 4. Six slices have
+      merged into <span class="mono">ui-improvement</span> since, all of them
+      answering this ticket's own background — screens that make activity easy
+      to analyse. Every one is on the review server. None of them changes a
+      model, a migration or the GraphQL schema, so none of them changes what
+      was verified above.
+    </p>
+
+    <div class="stats">
+      <div class="stat good"><b>13,627 → 5,512px</b><span>the 集計 report, with three charts where there were none</span></div>
+      <div class="stat good"><b>2,005 → 1,352px</b><span>the landing page, which used to re-list the sidebar</span></div>
+      <div class="stat good"><b>0</b><span>new dependencies — Chart.js ships with the theme</span></div>
+      <div class="stat good"><b>0</b><span>migrations, model changes or API changes</span></div>
+    </div>
+
+    <h3>The six slices</h3>
+    <ul class="checks">
+      <li><b>Charts, and a bar denominator that was wrong</b>
+        <em>The time-of-day bars were scaled to the period total, so the busiest hour filled 11% of its track. They are scaled to the peak now, and the report has a daily trend line and an hourly chart. Each chart carries a data table, because a canvas does not answer browser zoom.</em></li>
+      <li><b>The 集計 report rebuilt</b>
+        <em>It was 13,627px of eight tables, 60% of it one list of unused features. Now: a summary row, charts, rankings, and the long lists behind disclosures.</em></li>
+      <li><b>The admin home page</b>
+        <em>It rendered unfold's full app list — nine sections, 2,005px, re-listing what the sidebar already shows, on the page every session lands on. Replaced by activity figures, a short row of shortcuts, and the full list behind one click so nothing became unreachable.</em></li>
+      <li><b>A dark-mode toggle a keyboard can reach</b>
+        <em>The theme ships one, as <span class="mono">&lt;a&gt;</span> elements with no <span class="mono">href</span> — not in the tab order, no response to Enter, 18px tall, and marking the active choice by colour alone. Its only content was an icon ligature, so a screen reader read the string <span class="mono">dark_mode</span>. It is now real buttons, 24×24, named in Japanese with the current theme in the name, and closable with Escape.</em></li>
+      <li><b>The home page drew 3,318 events and named 2,263 of them</b>
+        <em>The activity chart plots every event; the cards above it showed four of the five types. On the review data that is 4,396 of 4,949 events — 89% of all activity — drawn and never named. The row is now built from the report's own card list, so the two screens cannot drift, and the page states the total so the breakdown can be added up.</em></li>
+      <li><b>The report says what IS used, not only what is not</b>
+        <em>A list of every function with its usage, which ones were used for the first time in the period, and the record counts the dashboard shows. On the review data: 210 functions, 55 used, <strong>16 used for the first time</strong>, 155 unused.</em></li>
+    </ul>
+
+    <h3>Two things worth saying plainly</h3>
+    <ul class="checks">
+      <li><b>"New" means first used in this period, not newly shipped</b>
+        <em>The list of functions comes from the GraphQL schema, which carries no ship date — so "when did this arrive" is not a question the data can answer. When a feature was first used is, and for one nobody could use before it existed the two are the same.</em></li>
+      <li><b>The emergency kill switch still works, and still matters</b>
+        <em>Everything above is markup and queries. <span class="mono">ADMIN_UNFOLD_ENABLED=False</span> plus a restart removes the theme and leaves the Japanese labels, the activity log and the CSV export working, exactly as photographed in section 05.</em></li>
+    </ul>
+  </div>
+</section>
+
 <section id="routes">
   <div class="wrap">
-    <h2><span class="num">06</span>Routes checked</h2>
+    <h2><span class="num">07</span>Routes checked</h2>
     <p class="sub">The same request was sent to both environments and the responses compared.</p>
     <div class="tablewrap">
       <table>
@@ -410,7 +457,7 @@ footer .line{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 
 <section id="next-steps">
   <div class="wrap">
-    <h2><span class="num">07</span>What happens next (phase 5)</h2>
+    <h2><span class="num">08</span>What happens next (phase 5)</h2>
     <p class="sub">To be done once the design is approved. This verification was about confirming the preconditions are in place.</p>
     <ol class="steps">
       <li><b>Rebase ui-improvement onto dev</b> — picks up the 8 commits, including the security fix.</li>
@@ -428,8 +475,8 @@ footer .line{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 
 <footer>
   <div class="wrap line">
-    <span>DCS admin re-skin — verification report · 2026-10-16</span>
-    <span>ClickUp z94amcqevr / PR #754</span>
+    <span>DCS admin re-skin — verification report · 2026-10-16, updated 2026-10-19</span>
+    <span>ClickUp z94amcqevr / PRs #754, #757–#762</span>
   </div>
 </footer>
 
